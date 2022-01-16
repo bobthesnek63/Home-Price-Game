@@ -1,0 +1,142 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+    <script src="jquery-csv.js"></script>
+
+
+
+</head>
+<body>
+    <h1 style="text-align: center;">Real estate game</h1>
+
+    <h2>House stats:</h2>
+
+    <form action="javascript:void(0);" id="form">
+        <input name="guess" type="text" value="" placeholder="Guess">
+    </form>
+    
+    <form action="" id="next" style="visibility: hidden;">
+        <input type="Submit" value="Next Round" onclick="onwards()">
+    </form>
+
+    <script>
+        const socket = io.connect('http://localhost:8080');
+        var playerScores = {};
+        var leader;
+
+        socket.emit('initiate2');
+
+        socket.on('update2', function(data, sets){
+            socket.id = data.id;
+            socket.room = data.room;
+            socket.leader = data.leader;
+
+            console.log('update complete');
+
+        });
+
+        socket.on('sent', function(message){
+            socket.id = message;
+
+            socket.emit('check', socket.id);
+        });
+
+        var playerList;
+        socket.on('dataRec', function(gameData){
+            var test=document.createElement('section');
+            test.setAttribute('id','test');
+            document.body.appendChild(test);
+            test.style.float = 'left';
+            test.style.width = '50%';
+
+            var list = document.createElement('ul');
+            var priceHeader = document.createElement('h3');
+            priceHeader.setAttribute('id', 'price');
+            list.setAttribute('id', 'list');
+
+            test.appendChild(list);
+            test.appendChild(priceHeader);
+
+            playerList = gameData.players;
+
+            console.log(gameData.list.length);
+            for (var i = 0; i < gameData.list.length; i++){
+                if (i != 1){
+                    var listElement = document.createElement('li');
+                    list.appendChild(listElement);
+                    listElement.innerHTML = gameData.labels[i] + " : " + gameData.list[i];
+                }
+            }
+
+            priceHeader.style.visibility = 'hidden';
+            priceHeader.innerHTML = "Price : " + gameData.price;
+            
+            var section2 = document.createElement('section');
+            document.body.appendChild(section2);
+            section2.style.width = '50%';
+            section2.style.float = 'left';
+            
+            var playerTitle = document.createElement('h3');
+            playerTitle.setAttribute('id', 'title');
+            section2.appendChild(playerTitle);
+
+            document.getElementById('title').innerHTML = 'Players:';
+
+            var players = document.createElement('ul');
+            players.setAttribute('id', 'players');
+            section2.appendChild(players);
+
+            for (var i = 0; i < gameData.playerCount; i++){
+                var player = document.createElement('li');
+                var thing = "player" + i;
+                player.setAttribute('id', thing);
+                players.appendChild(player);
+
+                if (playerScores[gameData.players[i]] == undefined){
+                    playerScores[gameData.players[i]] = 0;
+                }
+
+                player.innerHTML = gameData.players[i] + " : " + playerScores[gameData.players[i]];
+            }
+        });
+
+        socket.on('score', function(scores){
+
+            console.log(playerList.length);
+            for (var i = 0; i < playerList.length; i++){
+
+                playerScores[playerList[i]] += scores[playerList[i]];
+                var thing = "player" + i;
+                document.getElementById(thing).innerHTML = playerList[i] + " : " + playerScores[playerList[i]];
+            }
+            
+        });
+
+        window.setTimeout(function(){
+            var x = document.getElementById('form');
+            var guess = x.elements['guess'].value;
+            console.log(guess);
+
+            socket.emit('guess', guess);
+
+            console.log(socket.leader + " " + socket.id);
+            if (socket.leader == socket.id){
+                document.getElementById('next').style.visibility = "visible";
+            }
+
+            document.getElementById('list').style.visibility = 'hidden';
+            document.getElementById('price').style.visibility = 'visible';
+        }, 5000)
+
+        function onwards(){
+            socket.emit('initiate2');
+        }
+    </script>
+
+    
+</body>
+</html>

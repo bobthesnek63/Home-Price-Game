@@ -1,0 +1,41 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+
+
+    
+</head>
+<body>
+    <h1>Welcome!</h1>
+    
+    <h3>Please enter your room name here: </h3>
+
+    <form action="/redirect" id="form" method="POST">
+        <input name="name" type="text">
+        <input type="Submit" onclick="send()">
+    </form>
+
+    <!-- <form action="/create", method="POST">
+        <input type="text", name="name", value="", placeholder="Room Name">
+        <input type="submit">
+    </form> -->
+
+    <script>
+        const socket = io.connect('http://localhost:8080');
+
+        
+        
+        function send(){
+            x = document.getElementById("form");
+            roomName = x.elements["name"].value;
+            socket.emit('create', roomName);
+            socket.emit('roles', roomName);
+        }
+    </script>
+</body>
+</html>

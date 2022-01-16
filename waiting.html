@@ -1,0 +1,56 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
+</head>
+<body>
+    <h1 style="text-align: center;">This is the waiting room for <%= roomName %></h1>
+    <h3>Current number of players in room:</h3>
+    <h3 id="updater">waiting</h3>
+
+    <button id="starter" onclick="start()">Start Game</button>
+
+
+    <script>
+        const socket = io.connect('http://localhost:8080');
+        socket.emit('initiate', "start process");
+
+        socket.on('test', function(data){
+            socket.emit('create', data.room);
+            socket.id = data.id;
+            socket.room = data.room;
+            socket.leader = data.leader;
+            if (!socket.leader){
+                document.getElementById('starter').style.visibility = "hidden";
+            }
+        });
+
+        socket.on('update', function(num){
+            console.log(num);
+            document.getElementById('updater').innerHTML = num;
+        });
+
+        function start(){
+            socket.emit('startGame');
+        }
+
+        socket.on('start', function(){
+            var dataSend = {
+                room : socket.room,
+                id : socket.id,
+                leader : socket.leader
+            }
+
+
+            socket.emit('receive', dataSend);
+
+            window.open('http://localhost:8080/start', "_self")
+        });
+
+
+    </script>
+</body>
+</html>
